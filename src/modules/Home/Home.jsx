@@ -1,114 +1,139 @@
 import React, { Component } from 'react';
-
 // Components
 import { Product } from './components';
 import { CartProduct } from './components';
+// Utils
+import { formatPrice } from 'utils';
+// Actions
+import { getProducts, getCart, setEmptyCart, generateCartId, addToCart, removeFromCart } from './actions';
 
 class Home extends Component {
-    constructor(props) {
-        super(props);
-    
-        this.state = {
-            Cart: [],
-            CartTotal: 0,
-            Currency: 'USD'
-        };
-        this.addToCart = this.addToCart.bind(this);
-        this.removeFromCart = this.removeFromCart.bind(this);
+
+    state = {
+        Products: [],
+        CartProducts: [],
+        CartTotal: 0,
+        CartQty: 0,
+        Currency: 'USD',
+        isLoading: true
     }
 
-    PRODUCT_LIST = [
-    {
-        name: 'Bonita Bananas',
-        description: 'Long thick-skinned edible fruit that is yellow when ripe. Keep bananas on a fruit dish in the living room at room temperature. If you want the bananas to ripen faster place the bowl in the sun. Like other tropical fruits and tomatoes and bell peppers, never store bananas in the refrigerator. Below 8 degrees Celsius the fruit will decay from the inside. These fruits will not ripen but will turn black in the refrigerator.',
-        price: 11.99,
-        id: 1,
-        qty: 1,
-        img: "https://images-na.ssl-images-amazon.com/images/I/71gI-IUNUkL._SY355_.jpg"
-    },
-    {
-        name: 'Spanish Oranges',
-        description: 'Orange trees are the most commonly cultivated fruit trees in the world. Oranges are a popular fruit because of their natural sweetness, wide variety of types and diversity of uses, from juices and marmalades to face masks and candied orange slices.',
-        price: 8.99,
-        id: 2,
-        qty: 1,
-        img: "https://jmdgv15kxa018mieg2cibjuu-wpengine.netdna-ssl.com/wp-content/uploads/2015/12/Oragnes.png"
-    },
-    {
-        name: 'Nuts from Brazil',
-        description: 'A nut is a fruit composed of an inedible hard shell and a seed, which is generally edible. In general usage, a wide variety of dried seeds are called nuts, but in a botanical context "nut" implies that the shell does not open to release the seed',
-        price: 79.49,
-        id: 3,
-        qty: 1,
-        img: "http://thisnzlife.co.nz/wp-content/uploads/2017/05/nuts_to_grow_jpg6.jpg"
-    },
-    {
-        name: 'Andalusian Peach',
-        description: 'Peach and nectarines are the same species, even though they are regarded commercially as different fruits. In contrast to peaches, whose fruits present the characteristic fuzz on the skin, nectarines are characterized by the absence of fruit-skin trichomes (fuzz-less fruit).',
-        price: 12.99,
-        id: 4,
-        qty: 1,
-        img: "https://goodlucksymbols.com/wp-content/uploads/2016/03/Peach-meaning.jpg"
-    }
-    ];
-
-    addToCart (id) {
-        let item = this.PRODUCT_LIST.find(product => product.id === id);
-        let items = this.state.Cart;
-        let itemIndex = this.state.Cart.indexOf(item);
-        let cartTotal = this.state.CartTotal + item.price;
+    componentDidMount() {
         
-        if (itemIndex !== -1) {
-            items[itemIndex].qty += 1;
+        getProducts().then(json => {
+            this.setState({
+                Products: json.items,
+                isLoading: false
+            });
+        });
+
+        this.cartId = localStorage.getItem('cartId');
+
+         //cart exists 
+        if(this.cartId) {
+            getCart(this.cartId).then(json => {
+                let cartQty = 0;
+                json.items.forEach(
+                    item => (cartQty += item.quantity)
+                );
+                this.setState({
+                    CartProducts: json.items,
+                    CartTotal: json.totals.items,
+                    Currency: json.currency,
+                    CartQty: cartQty
+                });
+            });
+        //create new cart
         } else {
-            items.push(item);
+            const cartId = generateCartId();
+            setEmptyCart(cartId);
+            localStorage.setItem('cartId', cartId);
+            this.cartId = cartId;
         }
-        
-        this.setState ({
-            Cart: items,
-            CartTotal: cartTotal
-        });
+
     }
 
-    removeFromCart (id) {
-        let item = this.state.Cart.find(product => product.id === id);
-        let items = this.state.Cart.filter(product => product.id !== id);
+    handleAddToCart = event => { 
+        const id = event.target.value;
+    
+        let cartQty = 0;
 
-        let cartTotal = this.state.CartTotal - (item.qty * item.price);
+        //let item = this.state.Products.find(product => product.code === id);
+        //let items = this.state.Cart;
+        ///let itemIndex = this.state.Cart.indexOf(item);
 
-        item.qty = 1;
+        addToCart(this.cartId, id).then(json => {
+            console.log(json);
+            json.items.forEach(
+                item => (cartQty += item.quantity)
+            );
+            this.setState({
+                CartProducts: json.items,
+                CartTotal: json.totals.items,
+                Currency: json.currency,
+                CartQty: cartQty
+            });
+        }).then(this.openCart);
+       
+    };
 
-        this.setState ({
-            Cart: items,
-            CartTotal: cartTotal
+    handleRemoveFromCart = event => {
+        
+        const id = event.target.value;
+
+        let cartQty = 0;
+
+        removeFromCart(this.cartId, id).then(json => {
+            json.items.forEach(
+                item => (cartQty += item.quantity)
+            );
+            this.setState({
+                CartProducts: json.items,
+                CartTotal: json.totals.items,
+                Currency: json.currency,
+                CartQty: cartQty
+            });
         });
         
+    }
+
+    openCart = () => {
+        document.getElementById("root").classList.toggle("cart-opened");
     }
 
     render() {
-        const products = this.PRODUCT_LIST;
+        //const products = this.PRODUCT_LIST;
 
         return (
             <div className="page">
                 <header className="header">
-                    <h1 className="container">My Homework</h1>
-                </header>
-                <main className="container">
-                    <ul className="product-list">
-                        {products.map((product, index) => <Product key={index} {...product} currency={this.state.Currency} onClick={this.addToCart} />)}
-                    </ul>
-                    <div className="cart">
-                        {this.state.Cart.length ? 
-                            <ul>
-                                {this.state.Cart.map((product, index) => <CartProduct key={index} {...product} onClick={this.removeFromCart}/>)}
-                                <li className="totals">Total: {this.state.CartTotal.toFixed(2)} {this.state.Currency}</li>
-                            </ul>
-                            :
-                            <p>Your cart is empty!</p>
-                        }
-                        
+                    <div className="container">
+                        <h1 className="logo">My Homework</h1>
+                        <button className="minicart" onClick={this.openCart} ><span className="icon-cart"></span><span className="cart-qty">{this.state.CartQty}</span></button>
                     </div>
+                </header>
+                <main className="container main-content">
+                    <ul className="product-list">
+                        {this.state.Products.map((product, index) => <Product key={index} {...product} currency={this.state.Currency} addToCartCallback={this.handleAddToCart} />)}
+                    </ul>
                 </main>
+                <aside id="cart" className="cart">
+                    {this.state.CartProducts.length ? 
+                        <div className="cart-container">
+                            <button className="minicart close-cart" onClick={this.openCart} ><span className="icon-close"></span></button> 
+                            <ul>
+                                {this.state.CartProducts.map((product, index) => <CartProduct key={index} {...product} currency={this.state.Currency} removeFromCartCallback={this.handleRemoveFromCart}/>)}
+                                <li className="totals">Total: {formatPrice(this.state.CartTotal)} {this.state.Currency}</li>
+                            </ul>
+                        </div>
+                        :
+                        <div className="cart-container">
+                            <button className="minicart close-cart" onClick={this.openCart} ><span className="icon-close"></span></button> 
+                            <p className="cart-container empty-cart">Your cart is empty!</p>
+                            <span className="icon-remove-cart"></span>
+                        </div>
+                    } 
+                </aside>
             </div>
         );
     }

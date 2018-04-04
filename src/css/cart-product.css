@@ -1,0 +1,111 @@
+.minicart {
+    float: right;
+    position: relative;
+    background: transparent;
+    border: none;
+    color: #fff;
+    padding: 10px;
+    & .icon-cart {
+        font-size: 2.5em;
+    }
+    & .cart-qty {
+        position: absolute;
+        top: 3px;
+        right: 3px;
+        background: orange;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        text-align: center;
+        line-height: 16px;
+        font-size: 10px;
+    }
+}
+.cart {
+    transform: scaleX(0);
+    z-index: 3;
+    transform-origin: right;
+    transition: transform .26s ease;
+    position: fixed;
+    width: 30%;
+    height: 100%;
+    max-width: 400px;
+    min-width: 320px;
+    background: #dedede;
+    padding: 20px;
+    top: 0;
+    right: 0;
+}
+.cart ul {
+    padding: 40px 0 0;
+    margin: 0;
+    list-style-type: none;
+}
+.cart-container {
+    opacity: 0;
+    transition: opacity .26s ease;
+}
+.cart-opened {
+   & .cart {
+       transform: scaleX(1);
+   } 
+   & .cart-container {
+        opacity: 1;
+   }
+}
+.close-cart {
+    position: absolute;
+    top: 0;
+    left: 0;
+    font-size: 2em;
+    color: #444;
+}
+.cart-item {
+    padding: 20px 50px 20px 0;
+    border-bottom: 1px solid #ccc;
+    border-top: 1px solid #ccc;
+    overflow: hidden;
+    position: relative;
+    overflow: hidden;
+    & img {
+        max-width: 50px;
+        mix-blend-mode: multiply;
+        float: left;
+        margin-right: 15px;
+    }
+}
+.cart-item-price {
+    font-size: 12px;
+}
+.qty-total {
+    font-size: 0.75em;
+    & .subtotal {
+        float: right;
+    }
+}
+.totals {
+    padding: 20px 0 0;
+    font-size: 16px;
+    font-weight: bold;
+}
+.cart-item button {
+    position: absolute;
+    top: 50%;
+    right: 0;
+    margin: -15px 0 0;
+    background: transparent;
+    border: none;
+    color: #444;
+    font-size: 1.5em;
+    padding: 0;
+}
+.empty-cart {
+    text-align: center;
+    padding-top: 40px;
+    & + .icon-remove-cart {
+        padding: 20px;
+        font-size: 5em;
+        display: block;
+        text-align: center;
+    }
+}

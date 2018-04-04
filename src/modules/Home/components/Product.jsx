@@ -1,34 +1,43 @@
 import React from 'react';
+// Utils
+import { formatPrice } from 'utils';
+// Actions
+import { BASE } from '.././actions';
 
-// Style
-import './Product.css';
+const Product = ({
+    code,
+    images,
+    name,
+    averageRating,
+    variants,
+    addToCartCallback
+  }) => {
+    // Rating  
+    let rating = averageRating/5*100;
 
-class Product extends React.Component {
-    constructor(props) {
-        super(props);
-        this.handleClick = this.handleClick.bind(this);
-    }
-    handleClick(e) {
-        const id = this.props.id;
-        this.props.onClick(id);
-    }
-    render () {
-        return(
-            <li className="item" dataId={this.props.id}>
-                <img src={this.props.img} alt={this.props.name}/>
-                <div className="product-info">
-                    <h2>{this.props.name}</h2>
-                    <p>{this.props.description}</p>
-                    <div className="add-to-cart">
-                        <p className="price">
-                            {this.props.price} {this.props.currency}
-                        </p>
-                        <button onClick={ this.handleClick } >Add to Cart</button>
-                    </div>
+    // Price  
+    variants = Object.values(variants);
+    let finalPrice = variants[0].price;
+
+    // Images
+    let image = images.find(image => image.code === "thumbnail");
+    
+    return(
+        <li className="item" data-id={code}>
+            <img  src={BASE + 'media/cache/resolve/sylius_shop_product_thumbnail/' + image.path} alt={name}/>
+            <div className="product-info">
+                <h2>{name}</h2>
+                {averageRating ? <p className="rating"><span style={{width:rating + '%'}}></span></p> : null}
+                <div className="add-to-cart">
+                    <p className="price">
+                        {formatPrice(finalPrice.current)} {finalPrice.currency}
+                    </p>
+                    <button value={code} onClick={ addToCartCallback } >Add to Cart</button>
                 </div>
-            </li>
-        );
-    }
+            </div>
+        </li>
+    );
 }
+
 
 export default Product;
